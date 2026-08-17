@@ -113,6 +113,18 @@ The query is saved in [`sql/03_state_aov_analysis.sql`](sql/03_state_aov_analysi
 
 **Interpretation:** The largest revenue markets are driven primarily by transaction volume rather than unusually high spending per order. High AOV in smaller states should be interpreted cautiously because those markets have much lower order volumes. This distinction prevents total revenue from being mistaken for higher customer value.
 
+### 4. Reviewing Monthly Business Performance
+
+**Question:** How is the business performing over time?
+
+Before interpreting the trend, I checked the time coverage of delivered orders. The 2016 portion of the dataset is extremely sparse, including only one delivered order in September and one in December. Treating these months as normal business performance would create a misleading trend.
+
+I therefore restricted the trend analysis to January 2017 through August 2018, the period with consistent delivered-order activity. The query is saved in [`sql/04_monthly_performance_analysis.sql`](sql/04_monthly_performance_analysis.sql).
+
+**Result:** Revenue grew substantially through 2017 and reached approximately 987.8K in November 2017. Revenue again approached this level in April and May 2018 at approximately 973.5K and 977.5K. Revenue then softened from June through August 2018. Average Order Value also declined to approximately 132.04 by August 2018.
+
+**Interpretation:** The data shows strong growth through 2017 followed by a high but more stable performance level in 2018, with some softening during the final three observed months. Because delivered-order coverage ends in August 2018, this should not be interpreted as evidence of a full-year decline. The available data also does not establish why the monthly peaks or declines occurred, so no causal explanation is assigned without further evidence.
+
 ## Dashboard
 
 Power BI dashboard development will follow after the SQL analysis and KPI definitions are finalized.
@@ -124,6 +136,8 @@ Power BI dashboard development will follow after the SQL analysis and KPI defini
 - The top three states account for approximately 63% of delivered-order product revenue.
 - São Paulo's AOV of 125.12 is lower than Rio de Janeiro and Minas Gerais, indicating that its revenue leadership is primarily scale-driven.
 - Paraíba has the highest AOV at 217.77, but its 517 delivered orders represent a much smaller market, so AOV alone should not be used to prioritize regions.
+- Monthly revenue expanded strongly through 2017, peaked in November 2017, and returned to a similarly high level in April and May 2018 before softening from June through August.
+- Sparse 2016 activity was excluded from trend interpretation to avoid presenting incomplete early-period coverage as a genuine business decline.
 
 ## Recommendations
 
@@ -134,3 +148,5 @@ To be added after findings are validated.
 - Revenue in this analysis is defined as the sum of item prices and excludes freight and other payment-related components.
 - Regional value conclusions should not be based on total revenue alone because differences may primarily reflect order volume.
 - Average Order Value in low-volume states should be interpreted carefully because smaller order counts can make comparisons less stable.
+- The delivered-order time series is sparse in 2016 and ends in August 2018, so trend conclusions are restricted to the period with consistent coverage.
+- Monthly movements are descriptive only. The dataset alone does not establish the causal drivers behind individual peaks or declines.
