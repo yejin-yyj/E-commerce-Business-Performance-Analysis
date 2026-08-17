@@ -82,6 +82,37 @@ The query is saved in [`sql/02_state_order_revenue_analysis.sql`](sql/02_state_o
 
 **Interpretation:** Geographic revenue concentration broadly follows order volume concentration. However, high total revenue does not necessarily mean customers in those states spend more per order. The next step is to compare average order value by state before drawing conclusions about regional customer value.
 
+### 3. Comparing Average Order Value Across States
+
+**Question:** Are high-revenue states also generating higher revenue per order?
+
+I calculated Average Order Value as total product revenue divided by distinct delivered orders for each state.
+
+```sql
+SELECT
+    c.customer_state,
+    COUNT(DISTINCT o.order_id) AS total_orders,
+    ROUND(SUM(oi.price), 2) AS total_revenue,
+    ROUND(
+        SUM(oi.price) / COUNT(DISTINCT o.order_id),
+        2
+    ) AS avg_order_value
+FROM orders AS o
+LEFT JOIN customers AS c
+    ON o.customer_id = c.customer_id
+LEFT JOIN order_items AS oi
+    ON o.order_id = oi.order_id
+WHERE o.order_status = 'delivered'
+GROUP BY c.customer_state
+ORDER BY avg_order_value DESC;
+```
+
+The query is saved in [`sql/03_state_aov_analysis.sql`](sql/03_state_aov_analysis.sql).
+
+**Result:** São Paulo generated the highest total revenue, but its Average Order Value was 125.12, below Rio de Janeiro at 142.48 and Minas Gerais at 136.73. Paraíba had the highest AOV at 217.77, but only 517 delivered orders.
+
+**Interpretation:** The largest revenue markets are driven primarily by transaction volume rather than unusually high spending per order. High AOV in smaller states should be interpreted cautiously because those markets have much lower order volumes. This distinction prevents total revenue from being mistaken for higher customer value.
+
 ## Dashboard
 
 Power BI dashboard development will follow after the SQL analysis and KPI definitions are finalized.
@@ -91,7 +122,8 @@ Power BI dashboard development will follow after the SQL analysis and KPI defini
 - Delivered order activity is strongly concentrated in a small number of states.
 - São Paulo leads both delivered order volume and product revenue.
 - The top three states account for approximately 63% of delivered-order product revenue.
-- Revenue concentration appears to be closely related to order volume concentration, which requires an Average Order Value check before interpreting these regions as higher-value markets.
+- São Paulo's AOV of 125.12 is lower than Rio de Janeiro and Minas Gerais, indicating that its revenue leadership is primarily scale-driven.
+- Paraíba has the highest AOV at 217.77, but its 517 delivered orders represent a much smaller market, so AOV alone should not be used to prioritize regions.
 
 ## Recommendations
 
@@ -101,3 +133,4 @@ To be added after findings are validated.
 
 - Revenue in this analysis is defined as the sum of item prices and excludes freight and other payment-related components.
 - Regional value conclusions should not be based on total revenue alone because differences may primarily reflect order volume.
+- Average Order Value in low-volume states should be interpreted carefully because smaller order counts can make comparisons less stable.
