@@ -7,13 +7,14 @@
 
 This project analyzes e-commerce transaction and customer data to identify the key drivers of business performance and translate them into decision-ready insights.
 
-The goal is not only to build a dashboard, but to demonstrate a structured analytical workflow: understanding the business question, identifying the required data, connecting relevant data sources, defining meaningful KPIs, and communicating actionable findings.
+The goal is not only to build a dashboard, but to demonstrate a structured analytical workflow: understanding the business question, identifying the required data, connecting relevant data sources, defining meaningful KPIs, validating unexpected results, and communicating actionable findings.
 
 ## Business Questions
 
 1. How is the business performing over time?
 2. Which product categories and regions are driving performance?
 3. Is delivery performance associated with customer satisfaction?
+4. Which product category should be prioritized if the business wants to reduce delivery-related customer experience risk?
 
 ## Data Used
 
@@ -72,7 +73,7 @@ The query is saved in [`sql/04_monthly_performance_analysis.sql`](sql/04_monthly
 
 **Result:** Revenue grew substantially through 2017 and reached approximately 987.8K in November 2017. Revenue again approached this level in April and May 2018 at approximately 973.5K and 977.5K. Revenue then softened from June through August 2018.
 
-**Interpretation:** The data shows strong growth through 2017 followed by a high but more stable performance level in 2018, with some softening during the final three observed months. Because delivered-order coverage ends in August 2018, this should not be interpreted as evidence of a full-year decline.
+**Interpretation:** The data shows strong growth through 2017 followed by a high but more stable performance level in 2018, with some softening during the final observed months. Because delivered-order coverage ends in August 2018, this should not be interpreted as evidence of a full-year decline.
 
 ### 5. Comparing Product Category Performance
 
@@ -98,6 +99,20 @@ The query is saved in [`sql/06_delivery_review_analysis.sql`](sql/06_delivery_re
 
 **Interpretation:** Customer satisfaction is substantially lower among late deliveries, with a 1.72-point gap in average review score between late and on-time orders. This is a strong operational signal that delivery reliability is associated with customer experience. However, the analysis is observational and does not prove that delivery lateness alone caused the lower review scores.
 
+### 7. Prioritizing Delivery Risk by Product Category
+
+**Decision question:** If delivery performance could be improved in only one product category first, which category represents the greatest combination of commercial exposure and customer experience risk?
+
+I evaluated category-level revenue, late-order volume, late rate, review-score gap, and revenue associated with late deliveries. During this analysis, an initial query produced a slightly higher `health_beauty` revenue than the earlier category analysis. Because the business definition had not changed, I treated the mismatch as a data-quality warning rather than accepting the result.
+
+**Data validation:** `order_items` is an item-level table and `reviews` can contain more than one row per order. Joining both directly can create a many-to-many fanout that duplicates item-price rows and inflates revenue. To prevent this, I first aggregated reviews to one row per order and order-item revenue to one row per order and category before joining the datasets.
+
+The corrected query is saved in [`sql/07_delivery_risk_priority_by_category.sql`](sql/07_delivery_risk_priority_by_category.sql).
+
+**Validated result for `health_beauty`:** 8,647 delivered orders, 1,233,131.72 in product revenue, 775 late orders, an 8.96% late rate, a 4.38 average review score for on-time deliveries versus 2.66 for late deliveries, and 112,476.28 in revenue associated with late orders.
+
+**Interpretation:** `health_beauty` is a strong first-priority candidate because it combines the highest overall category revenue with substantial late-delivery exposure and a 1.72-point review-score gap. This does not mean its late rate is the highest in the business. The prioritization is based on the combination of commercial importance, operational exposure, and customer experience impact rather than on a single metric.
+
 ## Dashboard
 
 Power BI dashboard development will follow after the SQL analysis and KPI definitions are finalized.
@@ -112,12 +127,14 @@ Power BI dashboard development will follow after the SQL analysis and KPI defini
 - `health_beauty`, `watches_gifts`, and `bed_bath_table` are the three largest revenue categories and together contribute approximately 25.9% of product revenue.
 - Category revenue drivers differ: `watches_gifts` is supported by high AOV, while `bed_bath_table` is more dependent on order volume.
 - Late deliveries represent about 8.0% of evaluated orders and are associated with a substantially lower average review score: 2.57 compared with 4.29 for on-time deliveries.
+- `health_beauty` combines high commercial value with meaningful delivery-related exposure: 775 late orders, 112.5K in late-order revenue, and a 1.72-point review-score gap.
+- A revenue mismatch during the category-risk analysis revealed a join fanout issue. Re-aggregating tables to compatible grains restored the validated category revenue and prevented duplicated revenue from entering the analysis.
 
 ## Recommendations
 
-- Monitor late-delivery rate alongside review score as a core customer-experience KPI.
-- Prioritize investigation of operational drivers behind late deliveries before choosing interventions, since this analysis establishes association rather than causation.
-- Evaluate high-revenue categories using both order volume and AOV rather than total revenue alone, because different categories generate revenue through different commercial patterns.
+- Prioritize deeper investigation of delivery performance in `health_beauty` because it combines high revenue exposure, substantial late-order volume, and a large customer-satisfaction gap.
+- Monitor late-delivery rate, late-order revenue, and review-score gap together rather than optimizing a single delivery metric in isolation.
+- Evaluate high-revenue categories using both order volume and AOV because different categories generate revenue through different commercial patterns.
 - Treat high-AOV, low-volume regions as potential opportunities for further investigation rather than automatically prioritizing them as the most valuable markets.
 
 ## Limitations
@@ -129,3 +146,4 @@ Power BI dashboard development will follow after the SQL analysis and KPI defini
 - Monthly movements are descriptive only. The dataset alone does not establish the causal drivers behind individual peaks or declines.
 - Product category analysis describes revenue contribution but does not include product cost or gross margin, so it should not be interpreted as category profitability.
 - The delivery analysis is observational. Differences in review scores may also be related to product quality, seller experience, customer expectations, or other factors not isolated in this analysis.
+- The category-prioritization framework identifies where exposure appears highest, but it does not identify the operational root cause of late delivery.
