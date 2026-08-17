@@ -54,13 +54,44 @@ LIMIT 10;
 
 The query is also saved in [`sql/01_orders_customers_join.sql`](sql/01_orders_customers_join.sql).
 
+### 2. Testing Whether Order Concentration Also Drives Revenue Concentration
+
+**Question:** Do the states with the highest order volumes also generate the highest revenue?
+
+To answer this, I added `order_items` to the existing order and customer data because product price is stored at the item level rather than in the `orders` table. Revenue is defined here as the sum of `order_items.price` for delivered orders.
+
+```sql
+SELECT
+    c.customer_state,
+    COUNT(DISTINCT o.order_id) AS total_orders,
+    ROUND(SUM(oi.price), 2) AS total_revenue
+FROM orders AS o
+LEFT JOIN customers AS c
+    ON o.customer_id = c.customer_id
+LEFT JOIN order_items AS oi
+    ON o.order_id = oi.order_id
+WHERE o.order_status = 'delivered'
+GROUP BY c.customer_state
+ORDER BY total_revenue DESC
+LIMIT 10;
+```
+
+The query is saved in [`sql/02_state_order_revenue_analysis.sql`](sql/02_state_order_revenue_analysis.sql).
+
+**Result:** The top states by order volume were also the top states by revenue. São Paulo ranked first with 40,501 delivered orders and approximately 5.07M in product revenue, followed by Rio de Janeiro and Minas Gerais. The top three states accounted for about 63% of total delivered-order product revenue.
+
+**Interpretation:** Geographic revenue concentration broadly follows order volume concentration. However, high total revenue does not necessarily mean customers in those states spend more per order. The next step is to compare average order value by state before drawing conclusions about regional customer value.
+
 ## Dashboard
 
 Power BI dashboard development will follow after the SQL analysis and KPI definitions are finalized.
 
 ## Key Findings
 
-To be added after analysis.
+- Delivered order activity is strongly concentrated in a small number of states.
+- São Paulo leads both delivered order volume and product revenue.
+- The top three states account for approximately 63% of delivered-order product revenue.
+- Revenue concentration appears to be closely related to order volume concentration, which requires an Average Order Value check before interpreting these regions as higher-value markets.
 
 ## Recommendations
 
@@ -68,4 +99,5 @@ To be added after findings are validated.
 
 ## Limitations
 
-To be documented after the data quality and analytical scope are assessed.
+- Revenue in this analysis is defined as the sum of item prices and excludes freight and other payment-related components.
+- Regional value conclusions should not be based on total revenue alone because differences may primarily reflect order volume.
