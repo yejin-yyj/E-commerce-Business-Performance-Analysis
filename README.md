@@ -1,5 +1,7 @@
 # E-commerce Business Performance Analysis
 
+![E-commerce Business Performance Dashboard](powerbi/ecommerce_business_performance_dashboard.png)
+
 **Tools:** SQL | Power BI  
 **Dataset:** Olist Brazilian E-Commerce Public Dataset
 
@@ -115,7 +117,9 @@ The corrected query is saved in [`sql/07_delivery_risk_priority_by_category.sql`
 
 ## Dashboard
 
-Power BI dashboard development will follow after the SQL analysis and KPI definitions are finalized.
+The Power BI dashboard summarizes the core business questions on one page using five KPIs and four supporting visuals. It focuses on delivered orders from January 2017 through August 2018 and highlights monthly revenue performance, category revenue drivers, regional market structure, and the relationship between delivery performance and review scores.
+
+Dashboard preview: [`powerbi/ecommerce_business_performance_dashboard.png`](powerbi/ecommerce_business_performance_dashboard.png)
 
 ## Key Findings
 
